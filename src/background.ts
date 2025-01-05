@@ -1,4 +1,4 @@
-let watchStartTime = Date.now();
+let watchStartTime: number | null = null;
 let lastUpdateTime = Date.now();
 let currentSessionLength = 0; // Track current session length
 let alarmSetup = false;
@@ -24,7 +24,7 @@ function clearAlarms() {
 // Update watch time stats
 async function updateWatchTime() {
   if (!watchStartTime) return;
-    console.log('updateWatchTime');
+  console.log('updateWatchTime');
   const result = await chrome.storage.local.get('watchStats');
   const stats = result['watchStats'] || {
     dailyWatchTime: 0,
@@ -76,7 +76,7 @@ async function updateWatchTime() {
     const { dailyLimit, weeklyLimit } = settings['netflixSettings'];
     const dailyTimeLeft = dailyLimit - stats.dailyWatchTime;
     const weeklyTimeLeft = weeklyLimit - stats.weeklyWatchTime;
-    
+
     if (dailyTimeLeft <= 0 || weeklyTimeLeft <= 0) {
       // Time limit already exceeded, block immediately
       await blockPlayback();
@@ -90,6 +90,7 @@ async function updateWatchTime() {
       if (timeLeftMs > 0) {
         // Set timeout to block after remaining time
         setTimeout(async () => {
+          console.log('clearnAlarms1');
           clearAlarms();
           await blockPlayback();
         }, timeLeftMs);
@@ -113,9 +114,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.action) {
     case 'WATCHING_STARTED':
       if (!alarmSetup) {
-          alarmSetup = true;
-        }
-    setupAlarms();
+        alarmSetup = true;
+      }
+      setupAlarms();
       watchStartTime = Date.now();
       lastUpdateTime = Date.now();
       currentSessionLength = 0; // Reset session length
@@ -123,55 +124,60 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
     case 'WATCHING_PAUSED':
       updateWatchTime();
+      console.log('clearnAlarms2');
+
       clearAlarms();
       break;
     case 'WATCHING_STOPPED':
       updateWatchTime();
       currentSessionLength = 0; // Reset session length on stop
+      console.log('clearnAlarms3');
+
       clearAlarms();
       break;
   }
 });
 
 chrome.tabs.onUpdated.addListener((tabId, tab) => {
-    if(tab.url) {
+  if (tab.url && tab.url.includes('netflix.com/')) {
+    if (tab.url.includes('netflix.com/watch')) {
+      chrome.tabs.sendMessage(tabId, {
+        type: 'NEW_VIDEO',
+      });
+    } else {
+      updateWatchTime();
+      currentSessionLength = 0;
+      console.log('clearnAlarms4');
 
-        if (tab.url.includes('netflix.com/watch')) {
-            chrome.tabs.sendMessage(tabId, {
-                type: 'NEW_VIDEO',
-            });
-        } else {
-            updateWatchTime();
-            currentSessionLength = 0;
-            clearAlarms();
-        }
-        
-        if (tab.url.includes('netflix.com/browse')) {
-            chrome.tabs.sendMessage(tabId, {
-                type: 'HIDE_RECOMMENDATIONS',
-            });
-        }
-        
-        if (tab.url.includes('netflix.com/search')) {
-            chrome.tabs.sendMessage(tabId, {
-                type: 'SEARCH_PAGE',
-            });
-        }
+      clearAlarms();
+    }
+
+    if (tab.url.includes('netflix.com/browse')) {
+      chrome.tabs.sendMessage(tabId, {
+        type: 'HIDE_RECOMMENDATIONS',
+      });
+    }
+
+    if (tab.url.includes('netflix.com/search')) {
+      chrome.tabs.sendMessage(tabId, {
+        type: 'SEARCH_PAGE',
+      });
+    }
   }
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
   //setup default settings
   const settings = await chrome.storage.sync.get('netflixSettings');
-  if(!settings['netflixSettings']) {
+  if (!settings['netflixSettings']) {
     chrome.storage.sync.set({
       netflixSettings: {
         dailyLimit: 30,
-      weeklyLimit: 200,
-      hideRecommendations: true,
-      disableAutoplay: true,
-      showEndTime: true,
-    },
-  });
-    }
+        weeklyLimit: 200,
+        hideRecommendations: true,
+        disableAutoplay: true,
+        showEndTime: true,
+      },
+    });
+  }
 });
