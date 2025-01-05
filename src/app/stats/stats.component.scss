@@ -1,0 +1,75 @@
+.stats-container {
+  padding: 16px;
+
+  .stat-circles {
+    display: flex;
+    justify-content: space-around;
+    gap: 16px;
+  }
+
+  .stat-circle {
+    text-align: center;
+
+    svg {
+      width: 100px;
+      height: 100px;
+
+      .circle-bg {
+        fill: none;
+        stroke: #eee;
+        stroke-width: 2.8;
+      }
+
+      .circle-fill {
+        fill: none;
+        stroke: #E50914;
+        stroke-width: 2.8;
+        stroke-linecap: round;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        stroke-dasharray: 0, 100;
+        transition: stroke-dasharray 0.8s ease;
+
+        &.animate {
+          stroke-dasharray: var(--progress, 0), 100;
+        }
+      }
+
+      text {
+        fill: #333;
+        font-size: 6px;
+        text-anchor: middle;
+        dominant-baseline: middle;
+
+        &.time-text {
+          font-size: 4px;
+          fill: #666;
+        }
+      }
+    }
+
+    span {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+
+  .longest-session {
+    text-align: center;
+    margin-top: 24px;
+
+    h3 {
+      margin: 0 0 12px;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .session-time {
+      font-size: 24px;
+      font-weight: 500;
+      color: #E50914;
+    }
+  }
+}

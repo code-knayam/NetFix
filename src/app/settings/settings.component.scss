@@ -1,0 +1,50 @@
+.settings-container {
+  padding: 16px;
+
+  .toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .limits {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .save-button {
+    width: 100%;
+    background: #E50914;
+    color: white;
+
+    &:hover {
+      background: #f40612;
+    }
+
+    .save-tick {
+      margin-left: 8px;
+      animation: popIn 0.3s ease;
+    }
+  }
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+  }
+
+  70% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

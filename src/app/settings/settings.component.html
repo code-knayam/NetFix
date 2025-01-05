@@ -1,0 +1,32 @@
+<div class="settings-container">
+  <div class="toggles">
+    <mat-slide-toggle [(ngModel)]="settings.disableAutoplay">
+      Disable Autoplay
+    </mat-slide-toggle>
+
+    <mat-slide-toggle [(ngModel)]="settings.hideRecommendations">
+      Hide Recommendations
+    </mat-slide-toggle>
+
+    <mat-slide-toggle [(ngModel)]="settings.showEndTime">
+      Show Episode End Time
+    </mat-slide-toggle>
+  </div>
+
+  <div class="limits">
+    <mat-form-field appearance="outline">
+      <mat-label>Daily Limit (minutes)</mat-label>
+      <input matInput type="number" [(ngModel)]="settings.dailyLimit" min="0">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Weekly Limit (minutes)</mat-label>
+      <input matInput type="number" [(ngModel)]="settings.weeklyLimit" min="0">
+    </mat-form-field>
+  </div>
+
+  <button mat-raised-button color="primary" (click)="saveSettings()" class="save-button">
+    Save Settings
+    <mat-icon *ngIf="showSaveAnimation" class="save-tick">check_circle</mat-icon>
+  </button>
+</div>
