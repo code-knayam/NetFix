@@ -184,7 +184,7 @@
       overlay.className = 'netflix-block-overlay';
       overlay.innerHTML = `
             <div class="netflix-block-message">
-              <img src="${chrome.runtime.getURL('netfix-logo.png')}" alt="NetFix Logo" />
+              <img src="https://code-knayam.github.io/NetFix/src/netfix-logo.png" alt="NetFix Logo" width="100" height="100" />
               <h2>Viewing limit reached</h2>
               <p>You've reached your Netflix viewing limit for today.</p>
               <p>Take a break and come back tomorrow!</p>
@@ -231,6 +231,7 @@
     overlay.style.width = '100vw';
     overlay.innerHTML = `
                   <div class="netflix-block-message">
+                    <img src="https://code-knayam.github.io/NetFix/src/netfix-logo.png" alt="NetFix Logo" width="100" height="100" />
                     <h2>Recommendations blocked</h2>
                     <p>Mindful watching is important.</p>
                     <p>Dont let the recommendations distract you.</p>
