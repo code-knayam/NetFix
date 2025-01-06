@@ -8,6 +8,24 @@ NetFix helps you take control of your Netflix viewing habits by providing tools 
 - **Search Without Distractions**: Recommendations remain visible on the search page for better usability
 - **Customizable Settings**: Enable or disable features through an easy-to-use popup interface
 
+## Documentation
+
+Here's how NetFix transforms your Netflix experience:
+
+### Before and After Comparison
+
+#### NetFix watch stats
+![NetFix watch stats](docs/netfix-1.png)
+
+#### Settings page
+![Netflix Homepage With NetFix](docs/netfix-2.png)
+
+#### Recommendations blocker
+![Netflix Search Without NetFix](docs/netfix-3.png)
+
+#### Viewing Limit Over
+![Viewing Limit Over](docs/netfix-4.png)
+
 ## Installation
 
 ### From Chrome Web Store
