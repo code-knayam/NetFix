@@ -5,7 +5,6 @@ let alarmSetup = false;
 
 function setupAlarms() {
   // Initialize alarm for periodic checks
-  console.log('setupAlarms');
   chrome.alarms.create('checkWatchTime', { periodInMinutes: 1 });
 
   // Listen for alarm
@@ -17,14 +16,13 @@ function setupAlarms() {
 }
 
 function clearAlarms() {
-  console.log('clearAlarms');
   chrome.alarms.clear('checkWatchTime');
 }
 
 // Update watch time stats
 async function updateWatchTime() {
   if (!watchStartTime) return;
-  console.log('updateWatchTime');
+
   const result = await chrome.storage.local.get('watchStats');
   const stats = result['watchStats'] || {
     dailyWatchTime: 0,
@@ -90,7 +88,6 @@ async function updateWatchTime() {
       if (timeLeftMs > 0) {
         // Set timeout to block after remaining time
         setTimeout(async () => {
-          console.log('clearnAlarms1');
           clearAlarms();
           await blockPlayback();
         }, timeLeftMs);
@@ -122,17 +119,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       currentSessionLength = 0; // Reset session length
       updateWatchTime(); // Check stats and limits immediately
       break;
+
     case 'WATCHING_PAUSED':
       updateWatchTime();
-      console.log('clearnAlarms2');
-
       clearAlarms();
       break;
+
     case 'WATCHING_STOPPED':
       updateWatchTime();
-      currentSessionLength = 0; // Reset session length on stop
-      console.log('clearnAlarms3');
-
+      currentSessionLength = 0;
       clearAlarms();
       break;
   }
@@ -147,8 +142,6 @@ chrome.tabs.onUpdated.addListener((tabId, tab) => {
     } else {
       updateWatchTime();
       currentSessionLength = 0;
-      console.log('clearnAlarms4');
-
       clearAlarms();
     }
 
