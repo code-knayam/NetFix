@@ -105,13 +105,16 @@
 
     // Add timeupdate listener to detect actual playback
     let hasStartedPlaying = false;
-    videoPlayer.addEventListener('timeupdate', (e) => {
-        if (!hasStartedPlaying && !videoPlayer?.paused && videoPlayer?.currentTime && videoPlayer?.currentTime > 0) {
-            hasStartedPlaying = true;
-            updateVideoEndTimer();
-            chrome.runtime.sendMessage({ action: 'WATCHING_STARTED' });
-        }
-    });
+    const timeUpdateListener = () => {
+      if (!hasStartedPlaying && !videoPlayer?.paused && videoPlayer?.currentTime && videoPlayer?.currentTime > 0) {
+        hasStartedPlaying = true;
+        updateVideoEndTimer();
+        chrome.runtime.sendMessage({ action: 'WATCHING_STARTED' });
+        videoPlayer.removeEventListener('timeupdate', timeUpdateListener);
+      }
+    };
+
+    videoPlayer.addEventListener('timeupdate', timeUpdateListener);
 
     videoPlayer.addEventListener('seeked', (e) => {
         updateVideoEndTimer();

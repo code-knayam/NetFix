@@ -108,16 +108,19 @@ async function blockPlayback() {
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Message received:', message);
+  
   switch (message.action) {
     case 'WATCHING_STARTED':
       if (!alarmSetup) {
         alarmSetup = true;
       }
+      console.log('WATCHING_STARTED received');
       setupAlarms();
       watchStartTime = Date.now();
       lastUpdateTime = Date.now();
-      currentSessionLength = 0; // Reset session length
-      updateWatchTime(); // Check stats and limits immediately
+      currentSessionLength = 0;
+      updateWatchTime();
       break;
 
     case 'WATCHING_PAUSED':
@@ -131,6 +134,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       clearAlarms();
       break;
   }
+  
+  return true; // Indicates async response
 });
 
 chrome.tabs.onUpdated.addListener((tabId, tab) => {
@@ -173,4 +178,16 @@ chrome.runtime.onInstalled.addListener(async () => {
       },
     });
   }
+});
+
+// Add this at the top of background.ts
+chrome.runtime.onStartup.addListener(() => {
+  console.log('Extension started');
+});
+
+// Keep service worker alive
+chrome.runtime.onConnect.addListener(function(port) {
+  port.onDisconnect.addListener(function() {
+    console.log('Port disconnected');
+  });
 });
