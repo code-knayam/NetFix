@@ -103,26 +103,33 @@
 
     listnerSetup = true;
 
+    // Add timeupdate listener to detect actual playback
+    let hasStartedPlaying = false;
+    videoPlayer.addEventListener('timeupdate', (e) => {
+        if (!hasStartedPlaying && !videoPlayer?.paused && videoPlayer?.currentTime && videoPlayer?.currentTime > 0) {
+            hasStartedPlaying = true;
+            updateVideoEndTimer();
+            chrome.runtime.sendMessage({ action: 'WATCHING_STARTED' });
+        }
+    });
+
     videoPlayer.addEventListener('seeked', (e) => {
-      updateVideoEndTimer();
+        updateVideoEndTimer();
     });
 
     videoPlayer.addEventListener('ended', (e) => {
-      chrome.runtime.sendMessage({ action: 'WATCHING_STOPPED' });
+        hasStartedPlaying = false;
+        chrome.runtime.sendMessage({ action: 'WATCHING_STOPPED' });
     });
 
     videoPlayer.addEventListener('pause', (e) => {
-      chrome.runtime.sendMessage({ action: 'WATCHING_PAUSED' });
+        chrome.runtime.sendMessage({ action: 'WATCHING_PAUSED' });
     });
 
     videoPlayer.addEventListener('play', (e) => {
-      updateVideoEndTimer();
-      chrome.runtime.sendMessage({ action: 'WATCHING_STARTED' });
+        updateVideoEndTimer();
+        chrome.runtime.sendMessage({ action: 'WATCHING_STARTED' });
     });
-
-    if (!videoPlayer.paused) {
-      chrome.runtime.sendMessage({ action: 'WATCHING_STARTED' });
-    }
   };
 
   const removeElement = (element: Element | null) => {
