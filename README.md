@@ -31,7 +31,7 @@ Here's how NetFix transforms your Netflix experience:
 ## Installation
 
 ### From Chrome Web Store
-*(Coming Soon)*
+[Install from Chrome Web Store](https://chromewebstore.google.com/detail/netfix/dglgdabgjjphcogfplhpciofecbjbnjm)
 
 ### Manual Installation
 1. Download or clone this repository
