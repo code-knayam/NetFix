@@ -73,3 +73,67 @@
     }
   }
 }
+
+.history-chart {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    opacity: 0.8;
+  }
+
+  .chart-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 100px;
+    padding: 10px 0;
+  }
+
+  .bar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 2px;
+    height: inherit;
+    justify-content: end;
+
+    .bar {
+      width: 20px;
+      background: #e50914;
+      border-radius: 2px;
+      transition: height 0.3s ease;
+      min-height: 1px;
+      cursor: pointer;
+
+      &:hover {
+        background: #ff0f1a;
+      }
+    }
+
+    .label {
+      margin-top: 5px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+  }
+}
+
+.daily-history .bar {
+  background: #e50914;
+}
+
+.weekly-history .bar {
+  background: #b20710;
+}
+
+.weekly-history {
+  .bar-container {
+    margin: 0 2px;
+  }
+}

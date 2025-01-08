@@ -29,6 +29,8 @@ async function updateWatchTime() {
     weeklyWatchTime: 0,
     longestSession: 0,
     lastUpdated: new Date().toISOString(),
+    dailyHistory: Array(7).fill(0), // Last 7 days
+    weeklyHistory: Array(5).fill(0), // Last 5 weeks
   };
 
   // Calculate minutes since last update
@@ -47,20 +49,33 @@ async function updateWatchTime() {
     stats.longestSession = currentSessionLength;
   }
 
-  // Check for day/week reset
   const lastUpdated = new Date(stats.lastUpdated);
   const currentDate = new Date();
 
-  // Reset daily stats if it's a new day
-  if (lastUpdated.getDate() !== currentDate.getDate()) {
+  // Check if it's a new day by comparing dates
+  if (!isSameDay(lastUpdated, currentDate)) {
+    // Shift daily history array
+    stats.dailyHistory.unshift(stats.dailyWatchTime);
+    stats.dailyHistory = stats.dailyHistory.slice(0, 7);
+    
     stats.dailyWatchTime = watchedMinutes;
     currentSessionLength = watchedMinutes;
+  } else {
+    // Update today's value in history
+    stats.dailyHistory[0] = stats.dailyWatchTime;
   }
 
-  // Reset weekly stats if it's a new week
-  if (lastUpdated.getDay() > currentDate.getDay()) {
+  // Check if it's a new week by comparing week numbers
+  if (!isSameWeek(lastUpdated, currentDate)) {
+    // Shift weekly history array
+    stats.weeklyHistory.unshift(stats.weeklyWatchTime);
+    stats.weeklyHistory = stats.weeklyHistory.slice(0, 5);
+    
     stats.weeklyWatchTime = watchedMinutes;
     stats.longestSession = currentSessionLength;
+  } else {
+    // Update current week's value in history
+    stats.weeklyHistory[0] = stats.weeklyWatchTime;
   }
 
   stats.lastUpdated = currentDate.toISOString();
@@ -177,7 +192,18 @@ chrome.runtime.onInstalled.addListener(async () => {
         showEndTime: true,
       },
     });
+    chrome.storage.local.set({ watchStats: {
+      dailyWatchTime: 0,
+      weeklyWatchTime: 0,
+      longestSession: 0,
+      lastUpdated: new Date().toISOString(),
+      dailyHistory: Array(7).fill(0),
+      weeklyHistory: Array(5).fill(0),
+    } });
   }
+  
+  // Uncomment the following line during development to seed test data
+  // await seedTestData();
 });
 
 // Add this at the top of background.ts
@@ -191,3 +217,39 @@ chrome.runtime.onConnect.addListener(function(port) {
     console.log('Port disconnected');
   });
 });
+
+// Helper functions for date comparison
+function isSameDay(date1: Date, date2: Date): boolean {
+  return date1.getFullYear() === date2.getFullYear() &&
+         date1.getMonth() === date2.getMonth() &&
+         date1.getDate() === date2.getDate();
+}
+
+function isSameWeek(date1: Date, date2: Date): boolean {
+  // Get week number for both dates
+  const getWeekNumber = (date: Date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  };
+  
+  return date1.getFullYear() === date2.getFullYear() &&
+         getWeekNumber(date1) === getWeekNumber(date2);
+}
+
+// Helper function to seed test data
+async function seedTestData() {
+  const testStats = {
+    dailyWatchTime: 45,
+    weeklyWatchTime: 180,
+    longestSession: 120,
+    lastUpdated: new Date().toISOString(),
+    dailyHistory: [0, 0,0,0,0,0,0], // Last 7 days
+    weeklyHistory: [0, 0, 0, 0, 0], // Last 5 weeks
+  };
+  
+  await chrome.storage.local.set({ watchStats: testStats });
+  console.log('Test data seeded successfully');
+}

@@ -26,4 +26,26 @@
     <h3>Longest Session This Week</h3>
     <div class="session-time">{{formatTime(longestSession)}}</div>
   </div>
+
+  <!-- Daily History Chart -->
+  <div class="history-chart daily-history">
+    <h3>Last 7 Days</h3>
+    <div class="chart-container">
+      <div class="bar-container" *ngFor="let value of dailyHistory; let i = index">
+        <div class="bar" [style.height.%]="getBarHeight(value, maxDailyValue)" [title]="formatTime(value)"></div>
+        <div class="label">{{lastWeekDays[i]}}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly History Chart -->
+  <div class="history-chart weekly-history">
+    <h3>Last 5 Weeks</h3>
+    <div class="chart-container">
+      <div class="bar-container" *ngFor="let value of weeklyHistory; let i = index">
+        <div class="bar" [style.height.%]="getBarHeight(value, maxWeeklyValue)" [title]="formatTime(value)"></div>
+        <div class="label">W{{i + 1}}</div>
+      </div>
+    </div>
+  </div>
 </div>
