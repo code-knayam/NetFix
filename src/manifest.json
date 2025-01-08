@@ -17,9 +17,15 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.netflix.com/*"],
-      "js": ["content.js"],
-      "css": ["content.css"]
+      "matches": [
+        "*://*.netflix.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ]
     }
   ],
   "action": {
@@ -37,4 +43,4 @@
     "48": "netfix-logo.png",
     "128": "netfix-logo.png"
   }
-} 
+}

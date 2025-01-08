@@ -1,4 +1,6 @@
-# NetFix Chrome Extension
+# Netfix
+
+![Version](https://img.shields.io/badge/version-1.1.4-blue)
 
 NetFix helps you take control of your Netflix viewing habits by providing tools to customize your browsing experience.
 
@@ -49,6 +51,24 @@ Here's how NetFix transforms your Netflix experience:
 2. Run the extension
 `npm run dev`
 `npm run build:extension`
+
+### Build Commands
+
+- `npm run build` - Creates a development build in `dist/netflix` directory
+- `npm run bundle` - Creates a production build, increments version, and creates a versioned zip file in `uploads` directory
+
+### Development Process
+
+1. Make your changes in the source files
+2. Use `npm run build` during development to test your changes
+3. Load the extension from `dist/netflix` in Chrome's developer mode
+4. When ready for release:
+   - Use `npm run bundle` to create a production build
+   - The script will automatically:
+     - Increment the minor version in manifest.json
+     - Create a production build
+     - Generate a versioned zip file in the `uploads` directory
+   - The zip file will be named `netflix-extension-v{version}.zip`
 
 
 ## Contributing
