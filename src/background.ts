@@ -1,6 +1,5 @@
 let watchStartTime: number | null = null;
 let lastUpdateTime = Date.now();
-let currentSessionLength = 0; // Track current session length
 let alarmSetup = false;
 
 function setupAlarms() {
@@ -19,62 +18,86 @@ function clearAlarms() {
   chrome.alarms.clear('checkWatchTime');
 }
 
+// Add these helper functions at the top
+function getCurrentDate(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function getDateInTimezone(dateString: string): Date {
+  const date = new Date(dateString);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 // Update watch time stats
 async function updateWatchTime() {
-  if (!watchStartTime) return;
-
   const result = await chrome.storage.local.get('watchStats');
   const stats = result['watchStats'] || {
     dailyWatchTime: 0,
     weeklyWatchTime: 0,
     longestSession: 0,
-    lastUpdated: new Date().toISOString(),
-    dailyHistory: Array(7).fill(0), // Last 7 days
-    weeklyHistory: Array(5).fill(0), // Last 5 weeks
+    lastUpdated: getCurrentDate().toISOString(),
+    dailyHistory: Array(7).fill(0),
+    weeklyHistory: Array(5).fill(0),
   };
 
-  // Calculate minutes since last update
+  // If there's no active watching session, just update the historical data if needed
+  if (!watchStartTime) {
+    const lastUpdated = getDateInTimezone(stats.lastUpdated);
+    const currentDate = getCurrentDate();
+
+    if (!isSameDay(lastUpdated, currentDate)) {
+      const daysDiff = Math.floor((currentDate.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24));
+      for (let i = 0; i < Math.min(daysDiff, 7); i++) {
+        stats.dailyHistory.unshift(0);
+      }
+      stats.dailyHistory = stats.dailyHistory.slice(0, 7);
+      stats.dailyWatchTime = 0;
+    }
+
+    if (!isSameWeek(lastUpdated, currentDate)) {
+      const weeksDiff = Math.floor((currentDate.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24 * 7));
+      for (let i = 0; i < Math.min(weeksDiff, 5); i++) {
+        stats.weeklyHistory.unshift(0);
+      }
+      stats.weeklyHistory = stats.weeklyHistory.slice(0, 5);
+      stats.weeklyWatchTime = 0;
+      stats.longestSession = 0;
+    }
+
+    stats.lastUpdated = currentDate.toISOString();
+    await chrome.storage.local.set({ watchStats: stats });
+    return;
+  }
+
+  // Rest of the active watching session logic
   const now = Date.now();
   const watchedMinutes = (now - lastUpdateTime) / (1000 * 60);
 
-  // Update session length
-  currentSessionLength += watchedMinutes;
-
-  // Update stats
   stats.dailyWatchTime += watchedMinutes;
   stats.weeklyWatchTime += watchedMinutes;
 
-  // Check if current session is the longest
-  if (currentSessionLength > (stats.longestSession || 0)) {
-    stats.longestSession = currentSessionLength;
-  }
 
-  const lastUpdated = new Date(stats.lastUpdated);
-  const currentDate = new Date();
+  const lastUpdated = getDateInTimezone(stats.lastUpdated);
+  const currentDate = getCurrentDate();
 
   // Check if it's a new day by comparing dates
   if (!isSameDay(lastUpdated, currentDate)) {
-    // Shift daily history array
     stats.dailyHistory.unshift(stats.dailyWatchTime);
     stats.dailyHistory = stats.dailyHistory.slice(0, 7);
     
     stats.dailyWatchTime = watchedMinutes;
-    currentSessionLength = watchedMinutes;
   } else {
-    // Update today's value in history
     stats.dailyHistory[0] = stats.dailyWatchTime;
   }
 
   // Check if it's a new week by comparing week numbers
   if (!isSameWeek(lastUpdated, currentDate)) {
-    // Shift weekly history array
     stats.weeklyHistory.unshift(stats.weeklyWatchTime);
     stats.weeklyHistory = stats.weeklyHistory.slice(0, 5);
     
     stats.weeklyWatchTime = watchedMinutes;
-    stats.longestSession = currentSessionLength;
   } else {
-    // Update current week's value in history
     stats.weeklyHistory[0] = stats.weeklyWatchTime;
   }
 
@@ -134,7 +157,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       setupAlarms();
       watchStartTime = Date.now();
       lastUpdateTime = Date.now();
-      currentSessionLength = 0;
       updateWatchTime();
       break;
 
@@ -145,7 +167,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case 'WATCHING_STOPPED':
       updateWatchTime();
-      currentSessionLength = 0;
       clearAlarms();
       break;
   }
@@ -161,7 +182,6 @@ chrome.tabs.onUpdated.addListener((tabId, tab) => {
       });
     } else {
       updateWatchTime();
-      currentSessionLength = 0;
       clearAlarms();
     }
 
@@ -226,12 +246,11 @@ function isSameDay(date1: Date, date2: Date): boolean {
 }
 
 function isSameWeek(date1: Date, date2: Date): boolean {
-  // Get week number for both dates
   const getWeekNumber = (date: Date) => {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const d = new Date(date.getTime());
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
     return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   };
   
@@ -245,9 +264,9 @@ async function seedTestData() {
     dailyWatchTime: 45,
     weeklyWatchTime: 180,
     longestSession: 120,
-    lastUpdated: new Date().toISOString(),
-    dailyHistory: [0, 0,0,0,0,0,0], // Last 7 days
-    weeklyHistory: [0, 0, 0, 0, 0], // Last 5 weeks
+    lastUpdated: getCurrentDate().toISOString(),
+    dailyHistory: [0, 0, 0, 0, 0, 0, 0],
+    weeklyHistory: [0, 0, 0, 0, 0],
   };
   
   await chrome.storage.local.set({ watchStats: testStats });

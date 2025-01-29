@@ -1,14 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface WatchStats {
-  dailyWatchTime: number;
-  weeklyWatchTime: number;
-  longestSession: number;
-  dailyHistory: number[];
-  weeklyHistory: number[];
-  lastUpdated: string;
-}
+import { StatsService, WatchStats } from '../services/stats.service';
 
 @Component({
   selector: 'app-stats',
@@ -20,7 +12,6 @@ interface WatchStats {
 export class StatsComponent implements OnInit {
   dailyProgress = 0;
   weeklyProgress = 0;
-  longestSession = 0;
   dailyWatchTime = 0;
   weeklyWatchTime = 0;
   dailyHistory: number[] = [];
@@ -28,14 +19,10 @@ export class StatsComponent implements OnInit {
   showAnimation = false;
   refreshInterval: any;
 
-  // Helper getters for historical data display
+  constructor(private statsService: StatsService) {}
+
   get lastWeekDays(): string[] {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const today = new Date().getDay();
-    return Array(7).fill(0).map((_, i) => {
-      const index = (today - i + 7) % 7;
-      return days[index];
-    });
+    return this.statsService.getDayLabels();
   }
 
   get maxDailyValue(): number {
@@ -47,6 +34,7 @@ export class StatsComponent implements OnInit {
   }
 
   async ngOnInit() {
+    await this.statsService.checkDateChanges();
     await this.loadStats();
     setTimeout(() => {
       this.showAnimation = true;
@@ -58,33 +46,29 @@ export class StatsComponent implements OnInit {
   }
 
   async loadStats() {
-    const stats = await chrome.storage.local.get('watchStats');
-    const settings = await chrome.storage.sync.get('netflixSettings');
+    const stats = await this.statsService.getStats();
+    const settings = await this.statsService.getSettings();
 
-    if (stats['watchStats'] && settings['netflixSettings']) {
-      const watchStats: WatchStats = stats['watchStats'];
-      this.dailyWatchTime = watchStats.dailyWatchTime;
-      this.weeklyWatchTime = watchStats.weeklyWatchTime;
-      this.dailyHistory = watchStats.dailyHistory;
-      this.weeklyHistory = watchStats.weeklyHistory;
-      this.dailyProgress =
-        (this.dailyWatchTime / settings['netflixSettings']['dailyLimit']) * 100;
-      this.weeklyProgress =
-        (this.weeklyWatchTime / settings['netflixSettings']['weeklyLimit']) * 100;
-      this.longestSession = Math.round(watchStats.longestSession || 0);
+    if (stats && settings) {
+      this.updateStatsDisplay(stats, settings);
     }
+  }
+
+  private updateStatsDisplay(stats: WatchStats, settings: any) {
+    this.dailyWatchTime = stats.dailyWatchTime;
+    this.weeklyWatchTime = stats.weeklyWatchTime;
+    this.dailyHistory = stats.dailyHistory;
+    this.weeklyHistory = stats.weeklyHistory;
+    this.dailyProgress = (this.dailyWatchTime / settings.dailyLimit) * 100;
+    this.weeklyProgress = (this.weeklyWatchTime / settings.weeklyLimit) * 100;
   }
 
   formatTime(minutes: number): string {
-    if (minutes >= 120) {
-      return `${(minutes / 60).toFixed(1)}h`;
-    }
-    return `${Math.round(minutes)}m`;
+    return this.statsService.formatTime(minutes);
   }
 
-  // Calculate height percentage for bar charts
   getBarHeight(value: number, maxValue: number): number {
-    return maxValue ? (value / maxValue) * 100 : 0;
+    return this.statsService.getBarHeight(value, maxValue);
   }
 
   ngOnDestroy() {
