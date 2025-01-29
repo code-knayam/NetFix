@@ -1,6 +1,6 @@
 # Netfix
 
-![Version](https://img.shields.io/badge/version-1.1.2-blue)
+![Version](https://img.shields.io/badge/version-1.1.3-blue)
 
 NetFix helps you take control of your Netflix viewing habits by providing tools to customize your browsing experience.
 
